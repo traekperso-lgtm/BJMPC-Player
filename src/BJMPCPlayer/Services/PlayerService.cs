@@ -21,6 +21,7 @@ public sealed class PlayerService : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event Action<string>? Error;
+    public event Action<string>? Notice;          // information (repli automatique…)
     public event Action<string>? VideoMessage;   // touches / souris sur la fenêtre vidéo
     public event Action? MediaChanged;
 
@@ -30,6 +31,21 @@ public sealed class PlayerService : INotifyPropertyChanged
     public MpvPlayer? Mpv { get; private set; }
 
     private DispatcherQueue? _ui;
+    private bool _exclusiveRefused;              // refusé pendant cette session : on reste en partagé
+
+    /// <summary>Spatial3D est ouvert : son temps réel passe par la sortie par défaut, à ne pas réserver.</summary>
+    public static bool Spatial3DRunning =>
+        System.Diagnostics.Process.GetProcessesByName("Spatial3D").Length > 0 ||
+        System.Diagnostics.Process.GetProcessesByName("spatial3d-cli").Length > 0;
+
+    private bool TargetIsVirtualCable =>
+        Mpv?.AudioDevices().FirstOrDefault(d => d.Name == Settings.AudioDevice)?.Description
+            .Contains("VB-Audio", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>Mode exclusif réellement demandé : jamais vers VB-Cable ni quand Spatial3D tourne en sortie automatique.</summary>
+    public bool EffectiveExclusive =>
+        Settings.ExclusiveAudio && !_exclusiveRefused && !TargetIsVirtualCable &&
+        !(Settings.AudioDevice == "auto" && Spatial3DRunning);
     private DateTime _lastPosUpdate = DateTime.MinValue;
 
     private PlayerService()
@@ -85,7 +101,7 @@ public sealed class PlayerService : INotifyPropertyChanged
             Mpv = new MpvPlayer(new MpvOptions
             {
                 WindowHandle = videoWindow.ToInt64(),
-                Exclusive = Settings.ExclusiveAudio,
+                Exclusive = Settings.ExclusiveAudio && !(Settings.AudioDevice == "auto" && Spatial3DRunning),
                 AudioDevice = Settings.AudioDevice,
                 HardwareDecoding = Settings.HardwareDecoding,
                 ResumePlayback = Settings.ResumePlayback,
@@ -248,8 +264,37 @@ public sealed class PlayerService : INotifyPropertyChanged
 
     public void ApplyAudioSettings()
     {
-        Mpv?.ApplyAudioSettings(Settings.ExclusiveAudio, Settings.AudioDevice, Settings.NormalizeVolume);
+        _exclusiveRefused = false;                // nouvel essai demandé par l'utilisateur
+        Mpv?.ApplyAudioSettings(EffectiveExclusive, Settings.AudioDevice, Settings.NormalizeVolume);
         Settings.Save();
+        if (Settings.ExclusiveAudio && !EffectiveExclusive)
+            Notice?.Invoke("Spatial3D est ouvert (ou la sortie est VB-Cable) : le lecteur reste en mode partagé pour ne pas couper le son 3D.");
+        _ = CheckAudioOutputAsync();
+    }
+
+    /// <summary>
+    /// Vérifie que mpv a bien ouvert la carte son. Si l'exclusif est refusé (carte déjà prise par Spatial3D
+    /// ou une autre application), on repasse automatiquement en partagé au lieu de rester muet.
+    /// </summary>
+    private async Task CheckAudioOutputAsync()
+    {
+        await Task.Delay(900);
+        if (Mpv == null || !HasMedia) return;
+        bool hasAudio = Mpv.Tracks().Any(t => t.Type == "audio");
+        if (!hasAudio || !string.IsNullOrEmpty(Mpv.GetString("current-ao"))) return;
+        if (Mpv.GetString("audio-exclusive") == "yes")
+        {
+            _exclusiveRefused = true;
+            Mpv.ApplyAudioSettings(false, Settings.AudioDevice, Settings.NormalizeVolume);
+            Notice?.Invoke("Mode exclusif impossible : la carte son est déjà utilisée par une autre application (Spatial3D par exemple). Lecture en mode partagé.");
+            await Task.Delay(900);
+            if (Mpv != null && string.IsNullOrEmpty(Mpv.GetString("current-ao")))
+                Error?.Invoke("Aucune sortie audio : la carte son est réservée en mode exclusif par une autre application.");
+        }
+        else
+        {
+            Error?.Invoke("Aucune sortie audio : la carte son est réservée en mode exclusif par une autre application (Spatial3D par exemple), ou débranchée.");
+        }
     }
 
     public void ApplyVideoSettings()
@@ -314,6 +359,7 @@ public sealed class PlayerService : INotifyPropertyChanged
             item.Duration = Duration;
         }
         MediaChanged?.Invoke();
+        _ = CheckAudioOutputAsync();
         Cover = (!HasVideo && item != null && !MediaFormats.IsUrl(item.Path)) ? await LoadThumbnailAsync(item.Path, ThumbnailMode.MusicView, 512) : null;
     }
 

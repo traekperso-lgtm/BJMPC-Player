@@ -55,6 +55,12 @@ Pour en faire le lecteur par défaut : clic droit sur un film > Ouvrir avec > BJ
 
 ## Son 3D avec Spatial3D
 
+> Le mode exclusif réserve la carte son à un seul programme. Quand Spatial3D est ouvert, BJMPC Player
+> reste donc en mode partagé (sinon il couperait le son 3D, ou VB-Cable pour les autres applications).
+> Si l'exclusif est refusé parce qu'une autre application tient déjà la carte, le lecteur repasse
+> tout seul en partagé au lieu de rester muet, et le signale.
+
+
 Si [Spatial3D](https://github.com/traekperso-lgtm/Spatial3D) est installé et son mode temps réel
 actif, tout ce que lit BJMPC Player est spatialisé (périphérique sur « Automatique », mode exclusif
 désactivé). Paramètres > Audio propose un bouton pour ouvrir Spatial3D.

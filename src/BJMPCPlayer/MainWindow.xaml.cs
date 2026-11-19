@@ -44,6 +44,7 @@ public sealed partial class MainWindow : Window
 
         _video = new VideoHost(_hwnd);
         Player.Error += ShowError;
+        Player.Notice += m => ShowMessage(m, InfoBarSeverity.Warning);
         Player.VideoMessage += OnVideoMessage;
         Player.MediaChanged += OnMediaChanged;
         Player.PropertyChanged += (s, e) =>
@@ -68,7 +69,18 @@ public sealed partial class MainWindow : Window
 
         ApplyTheme(Player.Settings.Theme);
         Root.ActualThemeChanged += (s, e) => UpdateCaptionButtons();
-        Closed += (s, e) => { Player.Shutdown(); _video.Dispose(); };
+        // Fermeture : mpv doit détruire sa fenêtre vidéo en échangeant des messages avec la nôtre.
+        // L'arrêter depuis ce fil bloquerait les deux (fenêtre impossible à fermer) : on le fait à côté.
+        AppWindow.Closing += async (s, e) =>
+        {
+            if (_closing) return;
+            e.Cancel = true;
+            _closing = true;
+            AppWindow.Hide();
+            await Task.Run(() => Player.Shutdown());
+            _video.Dispose();
+            Application.Current.Exit();
+        };
 
         Nav.SelectedItem = Nav.MenuItems[0];
     }
@@ -225,7 +237,7 @@ public sealed partial class MainWindow : Window
     private async void OpenUrl_Click(object sender, RoutedEventArgs e) => await OpenUrlAsync();
     private async void TechInfo_Click(object sender, RoutedEventArgs e) => await ShowTechInfoAsync();
 
-    private bool _techOpen;
+    private bool _techOpen, _closing;
 
     /// <summary>Panneau « Informations techniques » : sortie WASAPI, mode, format envoyé à la carte, décodage vidéo…</summary>
     public async Task ShowTechInfoAsync()
@@ -465,12 +477,14 @@ public sealed partial class MainWindow : Window
         tb.ButtonHoverForegroundColor = dark ? Colors.White : Colors.Black;
     }
 
-    public void ShowError(string message)
+    public void ShowError(string message) => ShowMessage(message, InfoBarSeverity.Error);
+
+    public void ShowMessage(string message, InfoBarSeverity severity)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
             Info.Message = message;
-            Info.Severity = InfoBarSeverity.Error;
+            Info.Severity = severity;
             Info.IsOpen = true;
         });
     }

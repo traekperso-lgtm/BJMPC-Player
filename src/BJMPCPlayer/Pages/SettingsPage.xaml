@@ -23,11 +23,15 @@
             <Border Style="{StaticResource CardBorder}">
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <StackPanel>
                         <TextBlock Text="Mode exclusif WASAPI" />
                         <TextBlock Text="Le lecteur parle directement à la carte son, sans le mélangeur de Windows : son bit à bit, latence minimale. Les autres applications ne peuvent plus utiliser la carte pendant la lecture." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
                     </StackPanel>
                     <ToggleSwitch x:Name="ExclusiveSwitch" Grid.Column="1" Toggled="Audio_Toggled" />
+                    <TextBlock x:Name="ExclusiveNote" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                               Text="Spatial3D est ouvert : tant qu'il tourne, le lecteur reste en mode partagé pour ne pas couper le son 3D (l'exclusif s'appliquera à la sortie choisie si ce n'est pas « Automatique »)." />
                 </Grid>
             </Border>
             <Border Style="{StaticResource CardBorder}">

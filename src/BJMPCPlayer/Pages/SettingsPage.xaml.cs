@@ -33,6 +33,7 @@ public sealed partial class SettingsPage : Page
         ThemeChoice.SelectedIndex = s.Theme switch { "light" => 1, "dark" => 2, _ => 0 };
         RefreshFolders();
         Spatial3DCard.Visibility = File.Exists(Spatial3DPath) ? Visibility.Visible : Visibility.Collapsed;
+        ExclusiveNote.Visibility = PlayerService.Spatial3DRunning ? Visibility.Visible : Visibility.Collapsed;
         var v = Assembly.GetExecutingAssembly().GetName().Version;
         AboutTitle.Text = $"BJMPC Player {v?.Major}.{v?.Minor}.{v?.Build} — BJMPC Informatique";
         AboutEngine.Text = _p.Mpv != null ? $"{_p.Mpv.GetString("mpv-version")} · FFmpeg {_p.Mpv.GetString("ffmpeg-version")}" : "Moteur de lecture non chargé";
