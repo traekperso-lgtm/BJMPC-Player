@@ -8,7 +8,12 @@ si vous le souhaitez.
 
 ## Installation
 
-Double-clic sur **`installer.bat`** : il télécharge la dernière version publiée, l'installe dans
+**Le plus simple :** dans les [Releases](https://github.com/traekperso-lgtm/BJMPC-Player/releases), téléchargez
+`BJMPC-Player-<version>-Setup.exe` et lancez-le (aucun droit administrateur requis ; désinstallation depuis
+Paramètres > Applications). L'installateur est signé « BJMPC Informatique » : pour que Windows reconnaisse
+l'éditeur, lancez d'abord une fois `Installer-certificat-BJMPC.cmd`, fourni à côté (voir `certificat/LISEZMOI-certificat.txt`).
+
+**Autre méthode :** double-clic sur **`installer.bat`** : il télécharge la dernière version publiée, l'installe dans
 `%LOCALAPPDATA%\Programs\BJMPC Player`, crée les raccourcis (Bureau, menu Démarrer, *Envoyer vers*)
 et ajoute BJMPC Player au menu **Ouvrir avec** pour les formats audio et vidéo.
 Pour en faire le lecteur par défaut : clic droit sur un film > Ouvrir avec > BJMPC Player > « Toujours ».

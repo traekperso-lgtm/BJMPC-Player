@@ -50,10 +50,57 @@ jobs:
           Copy-Item README.md publish/
           "{0:N0} Mo" -f ((Get-ChildItem publish -Recurse | Measure-Object Length -Sum).Sum / 1MB)
 
+      - name: Vérification des scripts PowerShell
+        shell: pwsh
+        run: |
+          foreach ($f in Get-ChildItem -Recurse -Include *.ps1 -Path certificat, .github/scripts, tools) {
+            $e = $null; [void][Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$e)
+            if ($e) { $e | ForEach-Object { Write-Output "::error file=$($f.Name)::$($_.Message)" }; exit 1 }
+          }
+
+      - name: Signature BJMPC Informatique
+        id: sign
+        shell: pwsh
+        env:
+          BJMPC_CERT_PFX: ${{ secrets.BJMPC_CERT_PFX }}
+        run: ./.github/scripts/signer.ps1 -Preparer -Chemins publish/BJMPCPlayer.exe, publish/BJMPCPlayer*.dll
+
       - uses: actions/upload-artifact@v4
         with:
           name: BJMPC-Player-win64
           path: publish
+
+      - name: Installateur (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Null }
+          if (-not (Test-Path $iscc)) { throw 'Inno Setup introuvable' }
+          $v = ([xml](Get-Content src/BJMPCPlayer/BJMPCPlayer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $a = @("/DAppVersion=$v", "/DSourceDir=..\publish")
+          if ('${{ steps.sign.outputs.signe }}' -eq 'true') {
+            $a += '/DSIGN'
+            $a += '/Sbjmpc=$q' + $env:SIGNTOOL + '$q sign /f $q' + $env:BJMPC_PFX_PATH + '$q /p BJMPC-Informatique /fd sha256 /tr http://timestamp.digicert.com /td sha256 /d $qBJMPC Player$q $f'
+          }
+          & $iscc @a installer/BJMPCPlayer.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC : code $LASTEXITCODE" }
+          Copy-Item certificat/* installer-out/
+          Get-ChildItem installer-out | Format-Table Name, Length
+
+      - name: Vérification des signatures
+        if: steps.sign.outputs.signe == 'true'
+        shell: pwsh
+        run: |
+          foreach ($f in @(Get-Item publish/BJMPCPlayer.exe) + @(Get-ChildItem installer-out -Filter *.exe)) {
+            $s = Get-AuthenticodeSignature $f.FullName
+            Write-Output ("{0} : {1} ({2})" -f $f.Name, $s.SignerCertificate.Subject, $s.Status)
+            if (-not $s.SignerCertificate) { Write-Output "::error::$($f.Name) n'est pas signé"; exit 1 }
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BJMPC-Player-Setup
+          path: installer-out
 
       - name: Version
         id: ver
@@ -77,10 +124,17 @@ jobs:
           tag_name: v${{ steps.ver.outputs.version }}
           target_commitish: ${{ github.sha }}
           name: BJMPC Player v${{ steps.ver.outputs.version }}
-          files: BJMPC-Player-v${{ steps.ver.outputs.version }}-win64.zip
+          files: |
+            BJMPC-Player-v${{ steps.ver.outputs.version }}-win64.zip
+            installer-out/*
           body: |
             Lecteur multimédia moderne pour Windows 10/11 (64 bits) - BJMPC Informatique.
 
-            **Installation** : téléchargez le dépôt et double-cliquez sur `installer.bat`
-            (il récupère cette version, crée les raccourcis et l'entrée « Ouvrir avec »).
-            Ou décompressez le zip et lancez `BJMPCPlayer.exe`.
+            **Installation** : téléchargez `BJMPC-Player-${{ steps.ver.outputs.version }}-Setup.exe` et lancez-le
+            (raccourcis, « Envoyer vers » et « Ouvrir avec » pour les formats audio et vidéo ; désinstallation
+            depuis Paramètres > Applications). Aucun droit administrateur requis.
+
+            Signé « BJMPC Informatique » : pour que Windows reconnaisse l'éditeur, lancez d'abord une fois
+            `Installer-certificat-BJMPC.cmd` (voir `LISEZMOI-certificat.txt`).
+
+            Version portable : décompressez le zip et lancez `BJMPCPlayer.exe`.

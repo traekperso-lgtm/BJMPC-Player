@@ -4,3 +4,4 @@ deps/
 publish/
 *.user
 .vs/
+installer-out/
