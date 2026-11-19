@@ -113,12 +113,12 @@ jobs:
           Write-Host "Version $v - nouvelle : $(-not $exists)"
 
       - name: Zip de la release
-        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true'
+        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true' && steps.sign.outputs.signe == 'true'
         shell: pwsh
         run: Compress-Archive -Path publish/* -DestinationPath "BJMPC-Player-v${{ steps.ver.outputs.version }}-win64.zip"
 
       - name: Release GitHub
-        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true'
+        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true' && steps.sign.outputs.signe == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
