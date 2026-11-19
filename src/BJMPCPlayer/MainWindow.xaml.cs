@@ -21,14 +21,14 @@ namespace BJMPCPlayer;
 public sealed partial class MainWindow : Window
 {
     public PlayerService Player => PlayerService.Instance;
-    public static MainWindow? Current { get; private set; }
+    public static new MainWindow? Current { get; private set; }
 
     private readonly IntPtr _hwnd;
     private readonly VideoHost _video;
     private FrameworkElement? _videoTarget;
     private bool _fullScreen, _mini, _modal, _overTransport, _seekDragging, _updatingSeek;
     private SizeInt32 _restoreSize;
-    private readonly DispatcherQueueTimer _hideTimer;
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _hideTimer;
 
     public MainWindow()
     {
