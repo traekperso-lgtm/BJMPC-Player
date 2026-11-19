@@ -15,9 +15,9 @@ public sealed partial class NowPlayingPage : Page
         Unloaded += (s, e) => MainWindow.Current?.SetVideoTarget(null);
     }
 
-    public static Visibility Vis(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
-    public static Visibility AudioVis(bool hasVideo, bool hasMedia) => !hasVideo && hasMedia ? Visibility.Visible : Visibility.Collapsed;
-    public static Visibility EmptyVis(bool hasMedia) => hasMedia ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility Vis(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility AudioVis(bool hasVideo, bool hasMedia) => !hasVideo && hasMedia ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility EmptyVis(bool hasMedia) => hasMedia ? Visibility.Collapsed : Visibility.Visible;
 
     private async void Open_Click(object sender, RoutedEventArgs e) => await MainWindow.Current!.OpenFilesAsync();
 }

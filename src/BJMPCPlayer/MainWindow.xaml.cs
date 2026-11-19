@@ -423,12 +423,12 @@ public sealed partial class MainWindow : Window
         });
     }
 
-    public static string Clock(double s) => TimeFormat.Clock(s);
-    public static double SafeMax(double d) => d > 0 ? d : 1;
-    public static string PlayGlyph(bool playing) => playing ? "" : "";
-    public static string Percent(double v) => $"{Math.Round(v)} %";
-    public static bool? RepeatOn(RepeatMode r) => r != RepeatMode.Off;
-    public static string RepeatGlyph(RepeatMode r) => r == RepeatMode.One ? "" : "";
-    public static string VolumeGlyph(double v, bool muted) =>
+    public string Clock(double s) => TimeFormat.Clock(s);
+    public double SafeMax(double d) => d > 0 ? d : 1;
+    public string PlayGlyph(bool playing) => playing ? "" : "";
+    public string Percent(double v) => $"{Math.Round(v)} %";
+    public bool? RepeatOn(RepeatMode r) => r != RepeatMode.Off;
+    public string RepeatGlyph(RepeatMode r) => r == RepeatMode.One ? "" : "";
+    public string VolumeGlyph(double v, bool muted) =>
         muted || v <= 0 ? "" : v < 33 ? "" : v < 66 ? "" : "";
 }
