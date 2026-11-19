@@ -122,6 +122,14 @@ else
     Check(mpv.Paused && Math.Abs(mpv.Position - tp) < 0.01, "mpv : pause");
     mpv.Seek(2.0); mpv.Play(); Thread.Sleep(300);
     Check(mpv.Position >= 2.0 && !mpv.Paused, $"mpv : déplacement à 2 s ({mpv.Position:0.00})");
+    var info = TechInfo.Collect(mpv);
+    string Val(string label) => info.FirstOrDefault(x => x.Label == label)?.Value ?? "";
+    Console.WriteLine("  infos techniques : " + string.Join(" | ", info.Select(x => x.Label + " = " + x.Value)));
+    Check(Val("Format du fichier").Contains("48 kHz") && Val("Format du fichier").Contains("16 bits entiers") && Val("Format du fichier").Contains("1 canal"),
+          "infos : format du fichier (48 kHz, 16 bits, mono)");
+    Check(Val("Envoyé à la carte son").Contains("kHz"), "infos : format envoyé à la carte son");
+    Check(Val("Traitements") == "aucun (signal intact)", "infos : aucun traitement par défaut");
+    Check(TechInfo.SampleFormat("floatp") == "32 bits flottants" && TechInfo.SampleFormat("s24") == "24 bits entiers", "infos : noms des formats d'échantillons");
     mpv.SetVolume(55); Thread.Sleep(150);
     Check(Math.Abs(mpv.Volume - 55) < 0.01, "mpv : volume");
     Check(ended.Wait(4000) && reason == MpvEndReason.Eof, "mpv : fin de fichier signalée (EOF)");

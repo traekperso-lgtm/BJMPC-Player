@@ -223,6 +223,57 @@ public sealed partial class MainWindow : Window
     private async void OpenFiles_Click(object sender, RoutedEventArgs e) => await OpenFilesAsync();
     private async void OpenFolder_Click(object sender, RoutedEventArgs e) => await OpenFolderAsync();
     private async void OpenUrl_Click(object sender, RoutedEventArgs e) => await OpenUrlAsync();
+    private async void TechInfo_Click(object sender, RoutedEventArgs e) => await ShowTechInfoAsync();
+
+    private bool _techOpen;
+
+    /// <summary>Panneau « Informations techniques » : sortie WASAPI, mode, format envoyé à la carte, décodage vidéo…</summary>
+    public async Task ShowTechInfoAsync()
+    {
+        if (_techOpen || Player.Mpv == null) return;
+        _techOpen = true;
+        var panel = new StackPanel { Spacing = 4, MinWidth = 560 };
+        void Fill()
+        {
+            panel.Children.Clear();
+            string? section = null;
+            foreach (var line in Core.Mpv.TechInfo.Collect(Player.Mpv!))
+            {
+                if (line.Section != section)
+                {
+                    section = line.Section;
+                    panel.Children.Add(new TextBlock
+                    {
+                        Text = section, Margin = new Thickness(0, panel.Children.Count == 0 ? 0 : 12, 0, 2),
+                        Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"],
+                    });
+                }
+                var g = new Grid { ColumnSpacing = 16 };
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(170) });
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                g.Children.Add(new TextBlock { Text = line.Label, Opacity = 0.7 });
+                var v = new TextBlock { Text = line.Value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+                if (line.Highlight) v.Foreground = (Brush)Application.Current.Resources["AccentTextFillColorPrimaryBrush"];
+                Grid.SetColumn(v, 1);
+                g.Children.Add(v);
+                panel.Children.Add(g);
+            }
+        }
+        Fill();
+        var timer = DispatcherQueue.CreateTimer();
+        timer.Interval = TimeSpan.FromSeconds(1);
+        timer.Tick += (s, e) => Fill();
+        timer.Start();
+        var dialog = new ContentDialog
+        {
+            Title = "Informations techniques",
+            Content = new ScrollViewer { Content = panel, MaxHeight = 560 },
+            CloseButtonText = "Fermer",
+            XamlRoot = Root.XamlRoot,
+        };
+        try { await ShowModalAsync(dialog); }
+        finally { timer.Stop(); _techOpen = false; }
+    }
 
     private void Speed_Click(object sender, RoutedEventArgs e)
     {
@@ -369,6 +420,7 @@ public sealed partial class MainWindow : Window
             case VirtualKey.Escape when _fullScreen: SetFullScreen(false); break;
             case VirtualKey.Escape when _mini: SetMini(false); break;
             case VirtualKey.O when ctrl: _ = OpenFilesAsync(); break;
+            case VirtualKey.I when !ctrl: _ = ShowTechInfoAsync(); break;
             default: return;
         }
         e.Handled = true;

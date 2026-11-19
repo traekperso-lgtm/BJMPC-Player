@@ -30,6 +30,10 @@ Pour en faire le lecteur par défaut : clic droit sur un film > Ouvrir avec > BJ
   dossiers au choix ; étiquettes mises en cache.
 - **File d'attente** : lecture aléatoire, répétition (tout / un), « lire ensuite », réorganisation
   par glisser-déposer.
+- **Informations techniques** (touche I) : sortie audio réellement utilisée (WASAPI), mode exclusif
+  ou partagé, **format envoyé à la carte son**, décodage vidéo matériel ou logiciel, images perdues.
+  Pour vérifier le mode exclusif : un FLAC 96 kHz / 24 bits doit arriver à la carte en
+  « 96 kHz · 24 bits » ; en partagé, Windows le convertit à son format de mixage (souvent 48 kHz flottant).
 - **Reprise** des vidéos longues là où vous vous êtes arrêté.
 - Glisser-déposer de fichiers, dossiers et sous-titres sur la fenêtre ; une seule instance
   (un fichier ouvert depuis l'Explorateur arrive dans la fenêtre déjà ouverte).
@@ -46,6 +50,7 @@ Pour en faire le lecteur par défaut : clic droit sur un film > Ouvrir avec > BJ
 | F, F11, double-clic | Plein écran |
 | Échap | Quitter le plein écran / le mini-lecteur |
 | Ctrl+O | Ouvrir des fichiers |
+| I | Informations techniques |
 | Touches multimédia du clavier | Lecture, suivant, précédent, arrêt |
 
 ## Son 3D avec Spatial3D
