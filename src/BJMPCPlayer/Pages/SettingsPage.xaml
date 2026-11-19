@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="BJMPCPlayer.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Padding="40,24,40,40" Spacing="8" MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock Text="Paramètres" Style="{StaticResource TitleLargeTextBlockStyle}" Margin="0,0,0,12" />
+
+            <!-- Audio -->
+            <TextBlock Text="Audio" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+            <Border Style="{StaticResource CardBorder}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Périphérique de sortie" />
+                        <TextBlock Text="Sortie WASAPI utilisée par le lecteur." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+                    </StackPanel>
+                    <ComboBox x:Name="DeviceBox" Grid.Column="1" MinWidth="300" DisplayMemberPath="Description" SelectionChanged="DeviceBox_SelectionChanged" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Mode exclusif WASAPI" />
+                        <TextBlock Text="Le lecteur parle directement à la carte son, sans le mélangeur de Windows : son bit à bit, latence minimale. Les autres applications ne peuvent plus utiliser la carte pendant la lecture." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="ExclusiveSwitch" Grid.Column="1" Toggled="Audio_Toggled" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Égaliser le volume" />
+                        <TextBlock Text="Atténue les écarts entre passages forts et faibles (films la nuit, radios)." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="NormalizeSwitch" Grid.Column="1" Toggled="Audio_Toggled" />
+                </Grid>
+            </Border>
+            <Border x:Name="Spatial3DCard" Style="{StaticResource CardBorder}" Visibility="Collapsed">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Son 3D avec Spatial3D" />
+                        <TextBlock Text="Spatial3D est installé : quand son mode temps réel est actif, tout ce que lit BJMPC Player est spatialisé (laissez le périphérique sur « Automatique » et le mode exclusif désactivé)." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Ouvrir Spatial3D" Click="OpenSpatial3D_Click" />
+                </Grid>
+            </Border>
+
+            <!-- Vidéo et langues -->
+            <TextBlock Text="Vidéo et langues" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,16,0,0" />
+            <Border Style="{StaticResource CardBorder}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Décodage matériel" />
+                        <TextBlock Text="La carte graphique décode la vidéo (H.264, HEVC, AV1…) : moins de charge processeur." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="HwdecSwitch" Grid.Column="1" Toggled="Video_Toggled" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <Grid ColumnSpacing="16" RowSpacing="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Langues audio préférées" />
+                        <TextBlock Text="Codes séparés par des virgules (fr,fre,en…)." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+                    </StackPanel>
+                    <TextBox x:Name="AudioLangBox" Grid.Column="1" Width="240" LostFocus="Lang_LostFocus" />
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Text="Langues de sous-titres préférées" />
+                    </StackPanel>
+                    <TextBox x:Name="SubLangBox" Grid.Row="1" Grid.Column="1" Width="240" LostFocus="Lang_LostFocus" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Reprendre les vidéos là où je me suis arrêté" />
+                        <TextBlock Text="Pour les vidéos de plus de 5 minutes." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="ResumeSwitch" Grid.Column="1" Toggled="Video_Toggled" />
+                </Grid>
+            </Border>
+
+            <!-- Bibliothèque -->
+            <TextBlock Text="Bibliothèque" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,16,0,0" />
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel Spacing="8">
+                    <Grid>
+                        <TextBlock Text="Dossiers de musique" VerticalAlignment="Center" />
+                        <Button HorizontalAlignment="Right" Content="Ajouter un dossier" Tag="music" Click="AddFolder_Click" />
+                    </Grid>
+                    <ItemsControl x:Name="MusicFolders">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid Padding="0,2">
+                                    <TextBlock Text="{x:Bind}" VerticalAlignment="Center" Opacity="0.85" TextTrimming="CharacterEllipsis" />
+                                    <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Tag="{x:Bind}" Click="RemoveMusicFolder_Click">
+                                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel Spacing="8">
+                    <Grid>
+                        <TextBlock Text="Dossiers de vidéos" VerticalAlignment="Center" />
+                        <Button HorizontalAlignment="Right" Content="Ajouter un dossier" Tag="video" Click="AddFolder_Click" />
+                    </Grid>
+                    <ItemsControl x:Name="VideoFolders">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid Padding="0,2">
+                                    <TextBlock Text="{x:Bind}" VerticalAlignment="Center" Opacity="0.85" TextTrimming="CharacterEllipsis" />
+                                    <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Tag="{x:Bind}" Click="RemoveVideoFolder_Click">
+                                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Apparence -->
+            <TextBlock Text="Apparence" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,16,0,0" />
+            <Border Style="{StaticResource CardBorder}">
+                <RadioButtons x:Name="ThemeChoice" Header="Thème" SelectionChanged="Theme_SelectionChanged">
+                    <x:String>Comme Windows</x:String>
+                    <x:String>Clair</x:String>
+                    <x:String>Sombre</x:String>
+                </RadioButtons>
+            </Border>
+
+            <!-- À propos -->
+            <TextBlock Text="À propos" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,16,0,0" />
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="AboutTitle" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Name="AboutEngine" Opacity="0.75" TextWrapping="Wrap" />
+                    <TextBlock Text="Moteur de lecture libmpv (mpv.io) et FFmpeg. Interface WinUI 3." Opacity="0.75" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

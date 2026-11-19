@@ -1,0 +1,86 @@
+# Compile BJMPC Player, lance les tests (avec une vraie lecture libmpv) et publie l'exe.
+# Release automatique quand la <Version> du projet n'a pas encore de tag.
+name: Windows
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: libmpv (shinchiro/mpv-winbuild-cmake)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $rel = Invoke-RestMethod -Headers @{ Authorization = "Bearer $env:GH_TOKEN" } https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest
+          $asset = $rel.assets | Where-Object { $_.name -match '^mpv-dev-x86_64-\d{8}-git-[0-9a-f]+\.7z$' } | Select-Object -First 1
+          Write-Host "libmpv : $($asset.name)"
+          Invoke-WebRequest $asset.browser_download_url -OutFile mpv-dev.7z
+          7z x mpv-dev.7z -odeps/mpv -y | Out-Null
+          if (-not (Test-Path deps/mpv/libmpv-2.dll)) { throw "libmpv-2.dll absente" }
+
+      - name: Tests du coeur (lecture reelle avec libmpv)
+        shell: pwsh
+        run: |
+          $env:PATH = "$PWD\deps\mpv;$env:PATH"
+          dotnet run --project tests/BJMPCPlayer.Core.Tests -c Release
+
+      - name: Publication
+        run: dotnet publish src/BJMPCPlayer/BJMPCPlayer.csproj -c Release -r win-x64 -p:Platform=x64 -o publish
+
+      - name: Verification du paquet
+        shell: pwsh
+        run: |
+          foreach ($f in 'BJMPCPlayer.exe', 'libmpv-2.dll', 'Microsoft.WindowsAppRuntime.dll', 'Assets\BJMPCPlayer.ico') {
+            if (-not (Test-Path (Join-Path publish $f))) { throw "manquant : $f" }
+          }
+          Copy-Item README.md publish/
+          "{0:N0} Mo" -f ((Get-ChildItem publish -Recurse | Measure-Object Length -Sum).Sum / 1MB)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BJMPC-Player-win64
+          path: publish
+
+      - name: Version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content src/BJMPCPlayer/BJMPCPlayer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $exists = git ls-remote --tags origin "refs/tags/v$v"
+          "version=$v" >> $env:GITHUB_OUTPUT
+          "new=$(if ($exists) { 'false' } else { 'true' })" >> $env:GITHUB_OUTPUT
+          Write-Host "Version $v - nouvelle : $(-not $exists)"
+
+      - name: Zip de la release
+        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true'
+        shell: pwsh
+        run: Compress-Archive -Path publish/* -DestinationPath "BJMPC-Player-v${{ steps.ver.outputs.version }}-win64.zip"
+
+      - name: Release GitHub
+        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: BJMPC Player v${{ steps.ver.outputs.version }}
+          files: BJMPC-Player-v${{ steps.ver.outputs.version }}-win64.zip
+          body: |
+            Lecteur multimédia moderne pour Windows 10/11 (64 bits) - BJMPC Informatique.
+
+            **Installation** : téléchargez le dépôt et double-cliquez sur `installer.bat`
+            (il récupère cette version, crée les raccourcis et l'entrée « Ouvrir avec »).
+            Ou décompressez le zip et lancez `BJMPCPlayer.exe`.
