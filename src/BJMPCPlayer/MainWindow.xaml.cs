@@ -352,13 +352,14 @@ public sealed partial class MainWindow : Window
         if (focused is TextBox or AutoSuggestBox or PasswordBox) return;
         bool ctrl = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         bool onVideoPage = ContentFrame.Content is NowPlayingPage;
+        // 0xB0..0xB3 : touches multimédia (suivant, précédent, arrêt, lecture/pause)
         switch (e.Key)
         {
             case VirtualKey.Space when focused is not ButtonBase: Player.TogglePlay(); break;
-            case VirtualKey.MediaPlayPause: Player.TogglePlay(); break;
-            case VirtualKey.MediaNextTrack: case VirtualKey.N when !ctrl: Player.Next(); break;
-            case VirtualKey.MediaPreviousTrack: case VirtualKey.P when !ctrl: Player.Previous(); break;
-            case VirtualKey.MediaStop: Player.Stop(); break;
+            case (VirtualKey)0xB3: Player.TogglePlay(); break;
+            case (VirtualKey)0xB0: case VirtualKey.N when !ctrl: Player.Next(); break;
+            case (VirtualKey)0xB1: case VirtualKey.P when !ctrl: Player.Previous(); break;
+            case (VirtualKey)0xB2: Player.Stop(); break;
             case VirtualKey.Left when focused is not Slider: Player.SeekRelative(ctrl ? -60 : -10); break;
             case VirtualKey.Right when focused is not Slider: Player.SeekRelative(ctrl ? 60 : 10); break;
             case VirtualKey.Up when onVideoPage: Player.SetVolume(Player.Volume + 5); break;

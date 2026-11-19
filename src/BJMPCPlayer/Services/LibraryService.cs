@@ -178,7 +178,7 @@ public sealed class LibraryService
 
     private static IEnumerable<string> SafeEnumerate(string dir)
     {
-        var opts = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.System };
+        var opts = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = System.IO.FileAttributes.System };
         try { return Directory.EnumerateFiles(dir, "*", opts).ToList(); }
         catch { return Array.Empty<string>(); }
     }

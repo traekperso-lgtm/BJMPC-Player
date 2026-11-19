@@ -20,7 +20,7 @@ public static class Program
             return 0;
         }
         main.Activated += OnRedirected;
-        Application.Start(_ =>
+        Application.Start(p =>
         {
             var ctx = new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(ctx);
