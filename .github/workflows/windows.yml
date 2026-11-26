@@ -1,11 +1,17 @@
 # Compile BJMPC Player, lance les tests (avec une vraie lecture libmpv) et publie l'exe.
-# Release automatique quand la <Version> du projet n'a pas encore de tag.
+# Release automatique quand la <Version> du projet n'a pas encore de tag et que l'installateur est signé
+# (ou lancement manuel avec « sans_signature » coché : Release publiée non signée).
 name: Windows
 
 on:
   push:
     branches: ["**"]
   workflow_dispatch:
+    inputs:
+      sans_signature:
+        description: "Publier la Release même si l'installateur n'est pas signé (secret BJMPC_CERT_PFX absent)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -113,12 +119,12 @@ jobs:
           Write-Host "Version $v - nouvelle : $(-not $exists)"
 
       - name: Zip de la release
-        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true' && steps.sign.outputs.signe == 'true'
+        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true' && (steps.sign.outputs.signe == 'true' || inputs.sans_signature == true)
         shell: pwsh
         run: Compress-Archive -Path publish/* -DestinationPath "BJMPC-Player-v${{ steps.ver.outputs.version }}-win64.zip"
 
       - name: Release GitHub
-        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true' && steps.sign.outputs.signe == 'true'
+        if: github.ref == 'refs/heads/main' && steps.ver.outputs.new == 'true' && (steps.sign.outputs.signe == 'true' || inputs.sans_signature == true)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
@@ -134,7 +140,6 @@ jobs:
             (raccourcis, « Envoyer vers » et « Ouvrir avec » pour les formats audio et vidéo ; désinstallation
             depuis Paramètres > Applications). Aucun droit administrateur requis.
 
-            Signé « BJMPC Informatique » : pour que Windows reconnaisse l'éditeur, lancez d'abord une fois
-            `Installer-certificat-BJMPC.cmd` (voir `LISEZMOI-certificat.txt`).
+            ${{ steps.sign.outputs.signe == 'true' && 'Signé « BJMPC Informatique » : pour que Windows reconnaisse l''éditeur, lancez d''abord une fois `Installer-certificat-BJMPC.cmd` (voir `LISEZMOI-certificat.txt`).' || 'Version **non signée** : Windows SmartScreen peut afficher « Éditeur inconnu » ; cliquez sur « Informations complémentaires » puis « Exécuter quand même ».' }}
 
             Version portable : décompressez le zip et lancez `BJMPCPlayer.exe`.
