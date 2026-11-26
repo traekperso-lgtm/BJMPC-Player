@@ -1,5 +1,4 @@
 using System.Reflection;
-using BJMPCPlayer.Core.Mpv;
 using BJMPCPlayer.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -20,11 +19,9 @@ public sealed partial class SettingsPage : Page
     {
         _loading = true;
         var s = _p.Settings;
-        var devices = new List<AudioOutputDevice> { new("auto", "Automatique (sortie par défaut de Windows)") };
-        if (_p.Mpv != null) devices.AddRange(_p.Mpv.AudioDevices().Where(d => d.Name != "auto"));
-        DeviceBox.ItemsSource = devices;
-        DeviceBox.SelectedItem = devices.FirstOrDefault(d => d.Name == s.AudioDevice) ?? devices[0];
         ExclusiveSwitch.IsOn = s.ExclusiveAudio;
+        RefreshAudioOutput();
+        _p.PropertyChanged += Player_PropertyChanged;
         NormalizeSwitch.IsOn = s.NormalizeVolume;
         HwdecSwitch.IsOn = s.HardwareDecoding;
         ResumeSwitch.IsOn = s.ResumePlayback;
@@ -33,7 +30,6 @@ public sealed partial class SettingsPage : Page
         ThemeChoice.SelectedIndex = s.Theme switch { "light" => 1, "dark" => 2, _ => 0 };
         RefreshFolders();
         Spatial3DCard.Visibility = File.Exists(Spatial3DPath) ? Visibility.Visible : Visibility.Collapsed;
-        ExclusiveNote.Visibility = PlayerService.Spatial3DRunning ? Visibility.Visible : Visibility.Collapsed;
         var v = Assembly.GetExecutingAssembly().GetName().Version;
         AboutTitle.Text = $"BJMPC Player {v?.Major}.{v?.Minor}.{v?.Build} — BJMPC Informatique";
         AboutEngine.Text = _p.Mpv != null ? $"{_p.Mpv.GetString("mpv-version")} · FFmpeg {_p.Mpv.GetString("ffmpeg-version")}" : "Moteur de lecture non chargé";
@@ -46,11 +42,27 @@ public sealed partial class SettingsPage : Page
         VideoFolders.ItemsSource = LibraryService.VideoFolders(_p.Settings).ToList();
     }
 
-    private void DeviceBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e) => _p.PropertyChanged -= Player_PropertyChanged;
+
+    private void Player_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (_loading || DeviceBox.SelectedItem is not AudioOutputDevice d) return;
-        _p.Settings.AudioDevice = d.Name;
-        _p.ApplyAudioSettings();
+        if (e.PropertyName is nameof(PlayerService.OutputName) or nameof(PlayerService.ExclusiveBlockedReason)) RefreshAudioOutput();
+    }
+
+    /// <summary>
+    /// Pas de choix de périphérique : le lecteur joue sur la sortie de Windows. Le mode exclusif n'est
+    /// proposé que si cette carte est libre ; sinon le son va sur la sortie en cours, en partagé.
+    /// </summary>
+    private void RefreshAudioOutput()
+    {
+        OutputText.Text = (string.IsNullOrEmpty(_p.OutputName) ? "La sortie par défaut de Windows" : $"« {_p.OutputName} », la sortie de Windows")
+            + " : changez-la dans Windows (icône haut-parleur de la barre des tâches), le lecteur la suit.";
+        var reason = _p.ExclusiveBlockedReason;
+        ExclusiveCard.Visibility = reason == null ? Visibility.Visible : Visibility.Collapsed;
+        ExclusiveBusyCard.Visibility = reason == null ? Visibility.Collapsed : Visibility.Visible;
+        if (reason != null)
+            ExclusiveBusyText.Text = char.ToUpper(reason[0]) + reason[1..] +
+                ". La carte son est déjà utilisée : le lecteur envoie le son sur cette sortie en mode partagé, sans couper personne.";
     }
 
     private void Audio_Toggled(object sender, RoutedEventArgs e)

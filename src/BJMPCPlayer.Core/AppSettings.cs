@@ -8,7 +8,8 @@ public sealed class AppSettings
 {
     // Audio
     public bool ExclusiveAudio { get; set; }
-    public string AudioDevice { get; set; } = "auto";
+    // (pas de choix de périphérique : le lecteur joue sur la sortie de Windows ; l'ancien réglage
+    //  « AudioDevice » d'un settings.json existant est simplement ignoré à la lecture)
     public bool NormalizeVolume { get; set; }
     public double Volume { get; set; } = 80;
     public bool Muted { get; set; }

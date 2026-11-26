@@ -27,8 +27,12 @@ Pour en faire le lecteur par défaut : clic droit sur un film > Ouvrir avec > BJ
   (et vidéos en ligne si `yt-dlp` est installé).
 - **Vidéo** : décodage par la carte graphique (H.264, HEVC, AV1, VP9…), rendu Direct3D 11,
   plein écran (F11 ou double-clic), **mini-lecteur** toujours au premier plan.
-- **Audio WASAPI** : choix de la sortie, **mode exclusif** (bit à bit, sans le mélangeur de Windows),
-  égalisation du volume.
+- **Audio WASAPI** : le lecteur ne gère pas le choix de la sortie, il joue sur **celle de Windows**
+  (icône haut-parleur de la barre des tâches) et la suit quand elle change. **Mode exclusif** (bit à
+  bit, sans le mélangeur de Windows) proposé **seulement si la carte son est libre** : si elle est
+  déjà utilisée (Spatial3D actif, sortie VB-Cable, autre application qui joue dessus), le lecteur
+  envoie le son sur la sortie en cours, en mode partagé, sans couper personne ; si la carte est prise
+  pendant une lecture en exclusif, il la rend aussitôt. Égalisation du volume.
 - **Pistes** : choix de la piste audio et des sous-titres, sous-titres `.srt` voisins chargés
   automatiquement, ajout d'un fichier de sous-titres, langues préférées (français par défaut).
 - **Bibliothèque** : Musique (titres, albums avec pochettes, recherche) et Vidéos (vignettes),

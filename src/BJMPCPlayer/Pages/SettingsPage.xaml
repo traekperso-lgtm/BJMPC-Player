@@ -11,28 +11,26 @@
             <!-- Audio -->
             <TextBlock Text="Audio" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
             <Border Style="{StaticResource CardBorder}">
-                <Grid ColumnSpacing="16">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Périphérique de sortie" />
-                        <TextBlock Text="Sortie WASAPI utilisée par le lecteur." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
-                    </StackPanel>
-                    <ComboBox x:Name="DeviceBox" Grid.Column="1" MinWidth="300" DisplayMemberPath="Description" SelectionChanged="DeviceBox_SelectionChanged" />
-                </Grid>
+                <StackPanel>
+                    <TextBlock Text="Sortie audio" />
+                    <TextBlock x:Name="OutputText" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardBorder}">
+            <Border x:Name="ExclusiveCard" Style="{StaticResource CardBorder}">
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <StackPanel>
                         <TextBlock Text="Mode exclusif WASAPI" />
-                        <TextBlock Text="Le lecteur parle directement à la carte son, sans le mélangeur de Windows : son bit à bit, latence minimale. Les autres applications ne peuvent plus utiliser la carte pendant la lecture." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                        <TextBlock Text="Le lecteur parle directement à la carte son, sans le mélangeur de Windows : son bit à bit, latence minimale. Les autres applications ne peuvent plus utiliser la carte pendant la lecture. Proposé seulement quand la carte son est libre." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
                     </StackPanel>
                     <ToggleSwitch x:Name="ExclusiveSwitch" Grid.Column="1" Toggled="Audio_Toggled" />
-                    <TextBlock x:Name="ExclusiveNote" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"
-                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                               Text="Spatial3D est ouvert : tant qu'il tourne, le lecteur reste en mode partagé pour ne pas couper le son 3D (l'exclusif s'appliquera à la sortie choisie si ce n'est pas « Automatique »)." />
                 </Grid>
+            </Border>
+            <Border x:Name="ExclusiveBusyCard" Style="{StaticResource CardBorder}" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Mode exclusif WASAPI indisponible" />
+                    <TextBlock x:Name="ExclusiveBusyText" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                </StackPanel>
             </Border>
             <Border Style="{StaticResource CardBorder}">
                 <Grid ColumnSpacing="16">
@@ -49,7 +47,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Son 3D avec Spatial3D" />
-                        <TextBlock Text="Spatial3D est installé : quand son mode temps réel est actif, tout ce que lit BJMPC Player est spatialisé (laissez le périphérique sur « Automatique » et le mode exclusif désactivé)." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
+                        <TextBlock Text="Spatial3D est installé : quand son mode temps réel est actif, tout ce que lit BJMPC Player est spatialisé : le lecteur joue sur la sortie de Windows, donc dans Spatial3D, en mode partagé." Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
                     </StackPanel>
                     <Button Grid.Column="1" Content="Ouvrir Spatial3D" Click="OpenSpatial3D_Click" />
                 </Grid>
